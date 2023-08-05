@@ -2,17 +2,18 @@ import numpy as np
 
 
 class LeastSquares(object):
+    lstsq_range = 3
 
     # ------------- МНК згладжуваннядля визначення стат. характеристик -------------
     @staticmethod
     def non_liner_fit(data_set, print_stats=False):
         iter = len(data_set)
         Yin = np.zeros((iter, 1))
-        F = np.ones((iter, 3))
+        F = np.ones((iter, LeastSquares.lstsq_range))
+        power_range = range(1, F.shape[1] + 1)
         for i in range(iter):  # формування структури вхідних матриць МНК
             Yin[i, 0] = float(data_set[i])  # формування матриці вхідних даних
-            F[i, 1] = float(i)
-            F[i, 2] = float(i * i)
+            F[i] = list(map(lambda x: float(i ** x), power_range))
         FT = F.T
         FFT = FT.dot(F)
         FFTI = np.linalg.inv(FFT)
@@ -30,11 +31,11 @@ class LeastSquares(object):
     def non_liner_coef_fit(data_set, print_stats=False):
         iter = len(data_set)
         Yin = np.zeros((iter, 1))
-        F = np.ones((iter, 3))
+        F = np.ones((iter, LeastSquares.lstsq_range))
+        power_range = range(1, F.shape[1] + 1)
         for i in range(iter):  # формування структури вхідних матриць МНК
             Yin[i, 0] = float(data_set[i])  # формування матриці вхідних даних
-            F[i, 1] = float(i)
-            F[i, 2] = float(i * i)
+            F[i] = list(map(lambda x: float(i ** x), power_range))
         FT = F.T
         FFT = FT.dot(F)
         FFTI = np.linalg.inv(FFT)
@@ -54,6 +55,7 @@ class LeastSquares(object):
         Yout_Extrapol = np.zeros((iter + koef, 1))
         C = LeastSquares.non_liner_coef_fit(S0, print_stats=True)
         for i in range(iter + koef):
-            Yout_Extrapol[i, 0] = C[0, 0] + C[1, 0] * i + (C[2, 0] * i * i)  # проліноміальна крива МНК - прогнозування
+            # проліноміальна крива МНК - прогнозування
+            Yout_Extrapol[i, 0] = C[0, 0] + C[1, 0] * i + (C[2, 0] * i * i)
 
         return Yout_Extrapol

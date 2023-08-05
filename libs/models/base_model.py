@@ -2,13 +2,13 @@ import numpy as np
 
 
 class BaseModel:
-    def __init__(self, n):
+    def __init__(self, n, args=None):
         '''
             n - number of elements in model
         '''
         self.n = n
         self.__base_key = 'base'
-        self.__x = None
+        self.__x = args or None
         self.__y = {self.__base_key: None}
 
     def get_x(self):
@@ -30,8 +30,9 @@ class BaseModel:
 
         if self.__y[self.__base_key] is None:
             self.__y[self.__base_key] = np.zeros(self.n)
-            for x in self.get_x():
-                self.__y[self.__base_key][x] = self._model(x)
+            size_x = len(self.get_x())
+            for i in range(size_x):
+                self.__y[self.__base_key][i] = self._model(self.__x[i])
 
         return self.__y[self.__base_key]
 
@@ -87,6 +88,21 @@ class BaseModel:
             raise Exception('The clean function is None.')
 
         self.__y[noise_key] = clean_fn(self.__y[noise_key])
+
+    def copy_base_to(self, key):
+        '''
+            The method copies the base values to the key.
+
+            @param key - key to copy the base values to
+        '''
+
+        if key is None:
+            raise Exception(f'Key: {key} is None.')
+
+        if key in self.__y:
+            raise Exception(f'Key: {key} already exists.')
+
+        self.__y[key] = self.get_y().copy()
 
     def _model(self, x):
         return x

@@ -31,6 +31,16 @@ def get_data():
         print(df)
     return df
 
+def get_clean_data():
+    meteo_data = get_data()
+    #check for null values
+    print("null values")
+    print(meteo_data.isnull().sum())
+    #drop null values
+    meteo_data = meteo_data.dropna().reset_index(drop=True)
+
+    return meteo_data
+
 
 def __get_meteo_data (URL_TEMPLATE):
     '''
@@ -53,10 +63,10 @@ def __get_meteo_data (URL_TEMPLATE):
     today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     while date <= today:
         result_list['date'].append(date)
-        date += datetime.timedelta(milliseconds=response["series"][0]["pointInterval"])    
+        date += datetime.timedelta(milliseconds=response["series"][0]["pointInterval"])
 
     print(type(result_list))
 
     return result_list
 
-get_data()
+

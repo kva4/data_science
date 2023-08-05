@@ -26,11 +26,12 @@ import numpy as np
 import math as mt
 import matplotlib.pyplot as plt
 import pandas as pd
-from libs.models.quadratic_model import QuadraticModel
+from libs.models import QuadraticModel, SimpleModel
 from libs.random_value_distributions.normal_rvd import NormalRVD
 from libs.anomaly_detection import Detection
 from libs.regression_analysis import lstsq
 from libs.statistics import r2, Estimation
+from libs.load_data import *
 
 # ------------------------ ФУНКЦІЯ парсингу реальних даних --------------------------
 
@@ -119,16 +120,12 @@ if __name__ == '__main__':
         Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка з АВ')
 
     if (Data_mode == 2):
-        # SV_AV = file_parsing('https://www.oschadbank.ua/rates-archive', 'Oschadbank (USD).xls', 'Купівля')  # реальні дані
-        SV_AV = file_parsing('https://www.oschadbank.ua/rates-archive', 'Oschadbank (USD).xls',
-                             'Продаж')  # реальні дані
-        # SV_AV = file_parsing('https://www.oschadbank.ua/rates-archive', 'Oschadbank (USD).xls', 'КурсНбу')  # реальні дані
-
-        S0 = SV_AV
-        n = len(S0)
-        iter = int(n)  # кількість реалізацій ВВ
-        Plot_AV(SV_AV, SV_AV, 'Коливання курсу USD в 2022 році за даними Ощадбанк')
-        Estimation.lstsq_estimation(SV_AV, 'Коливання курсу USD в 2022 році за даними Ощадбанк')
+        # -------------------------------- Реальні дані -------------------------------------------
+        meteo_data = get_clean_data()
+        model = SimpleModel(meteo_data['date'].tolist(), meteo_data['mean'].tolist())
+        model.copy_base_to('noise_av')
+        Estimation.lstsq_estimation(model.get_y('noise_av'), 'Реальні дані')
+        Plot_AV(model.get_y(), [], 'Вибірка очищена від АВ алгоритм medium')
 
     if (Data_mode == 3):
         print('Бібліотеки Python для реалізації методів статистичного навчання:')
@@ -146,7 +143,6 @@ if __name__ == '__main__':
     print('4 - МНК згладжування')
     print('5 - МНК прогнозування')
     mode = int(input('mode:'))
-    SV_AV = model.get_y('noise_av').copy()
 
     if (mode == 1):
         print('Вибірка очищена від АВ метод medium')
@@ -211,7 +207,7 @@ if __name__ == '__main__':
         # --------------- Очищення від аномальних похибок sliding window -------------------
         n_Wind = 5  # розмір ковзного вікна для виявлення АВ
         koef_Extrapol = 0.5  # коефіціент прогнозування: співвідношення інтервалу спостереження до  інтервалу прогнозування
-        koef = mt.ceil(n * koef_Extrapol)  # інтервал прогнозу по кількісті вимірів статистичної вибірки
+        koef = mt.ceil(len(model.get_x()) * koef_Extrapol)  # інтервал прогнозу по кількісті вимірів статистичної вибірки
 
         clean_fn = lambda x: Detection.detect_sliding_wind(x, n_Wind)
         model.clean_noise(clean_fn, 'noise_av')
