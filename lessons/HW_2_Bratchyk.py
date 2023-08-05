@@ -28,6 +28,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from libs.models.quadratic_model import QuadraticModel
 from libs.random_value_distributions.normal_rvd import NormalRVD
+from libs.anomaly_detection import Detection
+from libs.regression_analysis import lstsq
+from libs.statistics import r2, Estimation
 
 # ------------------------ ФУНКЦІЯ парсингу реальних даних --------------------------
 
@@ -42,120 +45,10 @@ def file_parsing(URL, File_name, Data_name):
     return S_real
 
 
-# ---------------------- ФУНКЦІЇ тестової аддитивної моделі -------------------------
-
-# ----------- рівномірний закон розводілу номерів АВ в межах вибірки ----------------
-def randomAM(n, iter):
-    SAV = np.zeros((nAV))
-    S = np.zeros((n))
-    for i in range(n):
-        S[i] = np.random.randint(0, iter)  # параметри закону задаются межами аргументу
-    mS = np.median(S)
-    dS = np.var(S)
-    scvS = mt.sqrt(dS)
-    # -------------- генерація номерів АВ за рівномірним законом  -------------------
-    for i in range(nAV):
-        SAV[i] = mt.ceil(np.random.randint(1, iter))  # рівномірний розкид номерів АВ в межах вибірки розміром 0-iter
-    print('номери АВ: SAV=', SAV)
-    print('----- статистичны характеристики РІВНОМІРНОГО закону розподілу ВВ -----')
-    print('матиматичне сподівання ВВ=', mS)
-    print('дисперсія ВВ =', dS)
-    print('СКВ ВВ=', scvS)
-    print('-----------------------------------------------------------------------')
-    # гістограма закону розподілу ВВ
-    plt.hist(S, bins=20, facecolor="blue", alpha=0.5)
-    plt.show()
-    return SAV
-
-
-# ------------------------- нормальний закон розводілу ВВ ----------------------------
-def randoNORM(dm, dsig, iter):
-    S = np.random.normal(dm, dsig,
-                         iter)  # нормальний закон розподілу ВВ з вибіркою єбємом iter та параметрами: dm, dsig
-    mS = np.median(S)
-    dS = np.var(S)
-    scvS = mt.sqrt(dS)
-    print('------- статистичны характеристики НОРМАЛЬНОЇ похибки вимірів -----')
-    print('матиматичне сподівання ВВ=', mS)
-    print('дисперсія ВВ =', dS)
-    print('СКВ ВВ=', scvS)
-    print('------------------------------------------------------------------')
-    # гістограма закону розподілу ВВ
-    plt.hist(S, bins=20, facecolor="blue", alpha=0.5)
-    plt.show()
-    return S
-
-
-# ------------------- модель ідеального тренду (квадратичний закон)  ------------------
-def Model(n):
-    S0 = np.zeros((n))
-    for i in range(n):
-        S0[i] = (0.0000005 * i * i)  # квадратична модель реального процесу
-    return S0
-
-
-# ---------------- модель виміру (квадратичний закон) з нормальний шумом ---------------
-def Model_NORM(SN, S0N, n):
-    SV = np.zeros((n))
-    for i in range(n):
-        SV[i] = S0N[i] + SN[i]
-    return SV
-
-
-# ----- модель виміру (квадратичний закон) з нормальний шумом + АНОМАЛЬНІ ВИМІРИ
-def Model_NORM_AV(S0, SV, nAV, Q_AV):
-    SV_AV = SV
-    SSAV = np.random.normal(dm, (Q_AV * dsig), nAV)  # аномальна випадкова похибка з нормальним законом
-    for i in range(nAV):
-        k = int(SAV[i])
-        SV_AV[k] = S0[k] + SSAV[i]  # аномальні вимірів з рівномірно розподіленими номерами
-    return SV_AV
-
-
-# ----- Коефіцієнт детермінації - оцінювання якості моделі --------
-def r2_score(SL, Yout, Text):
-    # статистичні характеристики вибірки з урахуванням тренду
-    iter = len(Yout)
-    numerator = 0
-    denominator_1 = 0
-    for i in range(iter):
-        numerator = numerator + (SL[i] - Yout[i, 0]) ** 2
-        denominator_1 = denominator_1 + SL[i]
-    denominator_2 = 0
-    for i in range(iter):
-        denominator_2 = denominator_2 + (SL[i] - (denominator_1 / iter)) ** 2
-    R2_score_our = 1 - (numerator / denominator_2)
-    print('------------', Text, '-------------')
-    print('кількість елементів вбірки=', iter)
-    print('Коефіцієнт детермінації (ймовірність апроксимації)=', R2_score_our)
-
-    return R2_score_our
-
-
-# ----- статистичні характеристики вхідної вибірки  --------
-def Stat_characteristics_in(SL, Text):
-    # статистичні характеристики вибірки з урахуванням тренду
-    Yout = MNK_Stat_characteristics(SL)
-    iter = len(Yout)
-    SL0 = np.zeros((iter))
-    for i in range(iter):
-        SL0[i] = SL[i] - Yout[i, 0]
-    mS = np.median(SL0)
-    dS = np.var(SL0)
-    scvS = mt.sqrt(dS)
-    print('------------', Text, '-------------')
-    print('кількість елементів вбірки=', iter)
-    print('матиматичне сподівання ВВ=', mS)
-    print('дисперсія ВВ =', dS)
-    print('СКВ ВВ=', scvS)
-    print('-----------------------------------------------------')
-    return
-
-
 # ----- статистичні характеристики лінії тренда  --------
 def Stat_characteristics_out(SL_in, SL, Text):
     # статистичні характеристики вибірки з урахуванням тренду
-    Yout = MNK_Stat_characteristics(SL)
+    Yout = lstsq.non_liner_fit(SL)
     iter = len(Yout)
     SL0 = np.zeros((iter))
     for i in range(iter):
@@ -177,48 +70,6 @@ def Stat_characteristics_out(SL_in, SL, Text):
     print('-----------------------------------------------------')
     return
 
-
-# ----- статистичні характеристики екстраполяції  --------
-def Stat_characteristics_extrapol(koef, SL, Text):
-    # статистичні характеристики вибірки з урахуванням тренду
-    Yout = MNK_Stat_characteristics(SL)
-    iter = len(Yout)
-    SL0 = np.zeros((iter))
-    for i in range(iter):
-        SL0[i] = SL[i, 0] - Yout[i, 0]
-    mS = np.median(SL0)
-    dS = np.var(SL0)
-    scvS = mt.sqrt(dS)
-    #  довірчий інтервал прогнозованих значень за СКВ
-    scvS_extrapol = scvS * koef
-    print('------------', Text, '-------------')
-    print('кількість елементів ивбірки=', iter)
-    print('матиматичне сподівання ВВ=', mS)
-    print('дисперсія ВВ =', dS)
-    print('СКВ ВВ=', scvS)
-    print('Довірчий інтервал прогнозованих значень за СКВ=', scvS_extrapol)
-    print('-----------------------------------------------------')
-    return
-
-
-# ------------- МНК згладжуваннядля визначення стат. характеристик -------------
-def MNK_Stat_characteristics(S0):
-    iter = len(S0)
-    Yin = np.zeros((iter, 1))
-    F = np.ones((iter, 3))
-    for i in range(iter):  # формування структури вхідних матриць МНК
-        Yin[i, 0] = float(S0[i])  # формування матриці вхідних даних
-        F[i, 1] = float(i)
-        F[i, 2] = float(i * i)
-    FT = F.T
-    FFT = FT.dot(F)
-    FFTI = np.linalg.inv(FFT)
-    FFTIFT = FFTI.dot(FT)
-    C = FFTIFT.dot(Yin)
-    Yout = F.dot(C)
-    return Yout
-
-
 # --------------- графіки тренда, вимірів з нормальним шумом  ---------------------------
 def Plot_AV(S0_L, SV_L, Text):
     plt.clf()
@@ -227,144 +78,6 @@ def Plot_AV(S0_L, SV_L, Text):
     plt.ylabel(Text)
     plt.show()
     return
-
-
-# ------------------------------ МНК згладжування -------------------------------------
-def MNK(S0):
-    iter = len(S0)
-    Yin = np.zeros((iter, 1))
-    F = np.ones((iter, 3))
-    for i in range(iter):  # формування структури вхідних матриць МНК
-        Yin[i, 0] = float(S0[i])  # формування матриці вхідних даних
-        F[i, 1] = float(i)
-        F[i, 2] = float(i * i)
-    FT = F.T
-    FFT = FT.dot(F)
-    FFTI = np.linalg.inv(FFT)
-    FFTIFT = FFTI.dot(FT)
-    C = FFTIFT.dot(Yin)
-    Yout = F.dot(C)
-    print('Регресійна модель:')
-    print('y(t) = ', C[0, 0], ' + ', C[1, 0], ' * t', ' + ', C[2, 0], ' * t^2')
-    return Yout
-
-
-# ------------------------ МНК детекція та очищення АВ ------------------------------
-def MNK_AV_Detect(S0):
-    iter = len(S0)
-    Yin = np.zeros((iter, 1))
-    F = np.ones((iter, 3))
-    for i in range(iter):  # формування структури вхідних матриць МНК
-        Yin[i, 0] = float(S0[i])  # формування матриці вхідних даних
-        F[i, 1] = float(i)
-        F[i, 2] = float(i * i)
-    FT = F.T
-    FFT = FT.dot(F)
-    FFTI = np.linalg.inv(FFT)
-    FFTIFT = FFTI.dot(FT)
-    C = FFTIFT.dot(Yin)
-    return C[1, 0]
-
-
-# ---------------------------  МНК ПРОГНОЗУВАННЯ -------------------------------
-def MNK_Extrapol(S0, koef):
-    iter = len(S0)
-    Yout_Extrapol = np.zeros((iter + koef, 1))
-    Yin = np.zeros((iter, 1))
-    F = np.ones((iter, 3))
-    for i in range(iter):  # формування структури вхідних матриць МНК
-        Yin[i, 0] = float(S0[i])  # формування матриці вхідних даних
-        F[i, 1] = float(i)
-        F[i, 2] = float(i * i)
-    FT = F.T
-    FFT = FT.dot(F)
-    FFTI = np.linalg.inv(FFT)
-    FFTIFT = FFTI.dot(FT)
-    C = FFTIFT.dot(Yin)
-    print('Регресійна модель:')
-    print('y(t) = ', C[0, 0], ' + ', C[1, 0], ' * t', ' + ', C[2, 0], ' * t^2')
-    for i in range(iter + koef):
-        Yout_Extrapol[i, 0] = C[0, 0] + C[1, 0] * i + (C[2, 0] * i * i)  # проліноміальна крива МНК - прогнозування
-    return Yout_Extrapol
-
-
-# ------------------------------ Виявлення АВ за алгоритмом medium -------------------------------------
-def Sliding_Window_AV_Detect_medium(S0, n_Wind, Q):
-    # ---- параметри циклів ----
-    iter = len(S0)
-    j_Wind = mt.ceil(iter - n_Wind) + 1
-    S0_Wind = np.zeros((n_Wind))
-    # -------- еталон  ---------
-    j = 0
-    for i in range(n_Wind):
-        l = (j + i)
-        S0_Wind[i] = S0[l]
-        dS_standart = np.var(S0_Wind)
-        scvS_standart = mt.sqrt(dS_standart)
-    # ---- ковзне вікно ---------
-    for j in range(j_Wind):
-        for i in range(n_Wind):
-            l = (j + i)
-            S0_Wind[i] = S0[l]
-        # - Стат хар ковзного вікна --
-        mS = np.median(S0_Wind)
-        dS = np.var(S0_Wind)
-        scvS = mt.sqrt(dS)
-        # --- детекція та заміна АВ --
-        if scvS > (Q * scvS_standart):
-            # детектор виявлення АВ
-            S0[l] = mS
-    return S0
-
-
-# ------------------------------ Виявлення АВ за МНК -------------------------------------
-def Sliding_Window_AV_Detect_MNK(S0, Q, n_Wind):
-    # ---- параметри циклів ----
-    iter = len(S0)
-    j_Wind = mt.ceil(iter - n_Wind) + 1
-    S0_Wind = np.zeros((n_Wind))
-    # -------- еталон  ---------
-    Speed_standart = MNK_AV_Detect(SV_AV)
-    Yout_S0 = MNK(SV_AV)
-    # ---- ковзне вікно ---------
-    for j in range(j_Wind):
-        for i in range(n_Wind):
-            l = (j + i)
-            S0_Wind[i] = S0[l]
-        # - Стат хар ковзного вікна --
-        dS = np.var(S0_Wind)
-        scvS = mt.sqrt(dS)
-        # --- детекція та заміна АВ --
-        Speed_standart_1 = abs(Speed_standart * mt.sqrt(iter))
-        Speed_1 = abs(Q * Speed_standart * mt.sqrt(n_Wind) * scvS)
-        if Speed_1 > Speed_standart_1:
-            # детектор виявлення АВ
-            S0[l] = Yout_S0[l, 0]
-    return S0
-
-
-# ------------------------------ Виявлення АВ за алгоритмом sliding window -------------------------------------
-def Sliding_Window_AV_Detect_sliding_wind(S0, n_Wind):
-    # ---- параметри циклів ----
-    iter = len(S0)
-    j_Wind = mt.ceil(iter - n_Wind) + 1
-    S0_Wind = np.zeros((n_Wind))
-    Midi = np.zeros((iter))
-    # ---- ковзне вікно ---------
-    for j in range(j_Wind):
-        for i in range(n_Wind):
-            l = (j + i)
-            S0_Wind[i] = S0[l]
-        # - Стат хар ковзного вікна --
-        Midi[l] = np.median(S0_Wind)
-    # ---- очищена вибірка  -----
-    S0_Midi = np.zeros((iter))
-    for j in range(iter):
-        S0_Midi[j] = Midi[j]
-    for j in range(n_Wind):
-        S0_Midi[j] = S0[j]
-    return S0_Midi
-
 
 # -------------------------------- БЛОК ГОЛОВНИХ ВИКЛИКІВ ------------------------------
 
@@ -390,32 +103,20 @@ if __name__ == '__main__':
 
         # ------------------------------ сегмент даних ---------------------------
         # ------------ виклики функцій моделей: тренд, аномального та нормального шуму  ----------
-        S0 = Model(n)  # модель ідеального тренду (квадратичний закон)
-        SAV = randomAM(n, iter)  # модель рівномірних номерів АВ
-        S = randoNORM(dm, dsig, iter)  # модель нормальних помилок
         model = QuadraticModel(n)
 
         # ----------------------------- Нормальні похибки ------------------------------------
-        SV = Model_NORM(S, S0, n)  # модель тренда + нормальних помилок
+
         rv = NormalRVD(n, dm, dsig)
         rv.plot_hist()
-        Plot_AV(S0, SV, 'квадратична модель + Норм. шум')
-        Stat_characteristics_in(SV, 'Вибірка + Норм. шум')
-
-        print('different -----------------')
         model.add_noise(rv.values, 'noise')
         Plot_AV(model.get_y(), model.get_y('noise'), 'квадратична модель + Норм. шум')
-        Stat_characteristics_in(model.get_y('noise'), 'Вибірка + Норм. шум')
+        Estimation.lstsq_estimation(model.get_y('noise'), 'Вибірка + Норм. шум')
 
         # ----------------------------- Аномальні похибки ------------------------------------
-        SV_AV = Model_NORM_AV(S0, SV, nAV, Q_AV)  # модель тренда + нормальних помилок + АВ
-        Plot_AV(S0, SV_AV, 'квадратична модель + Норм. шум + АВ')
-        Stat_characteristics_in(SV_AV, 'Вибірка з АВ')
-
-        print('different -----------------')
         model.add_noise(rv.anomaly_values, 'noise_av')
         Plot_AV(model.get_y(), model.get_y('noise_av'), 'квадратична модель + Норм. шум + АВ')
-        Stat_characteristics_in(model.get_y('noise_av'), 'Вибірка з АВ')
+        Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка з АВ')
 
     if (Data_mode == 2):
         # SV_AV = file_parsing('https://www.oschadbank.ua/rates-archive', 'Oschadbank (USD).xls', 'Купівля')  # реальні дані
@@ -427,7 +128,7 @@ if __name__ == '__main__':
         n = len(S0)
         iter = int(n)  # кількість реалізацій ВВ
         Plot_AV(SV_AV, SV_AV, 'Коливання курсу USD в 2022 році за даними Ощадбанк')
-        Stat_characteristics_in(SV_AV, 'Коливання курсу USD в 2022 році за даними Ощадбанк')
+        Estimation.lstsq_estimation(SV_AV, 'Коливання курсу USD в 2022 році за даними Ощадбанк')
 
     if (Data_mode == 3):
         print('Бібліотеки Python для реалізації методів статистичного навчання:')
@@ -445,53 +146,65 @@ if __name__ == '__main__':
     print('4 - МНК згладжування')
     print('5 - МНК прогнозування')
     mode = int(input('mode:'))
+    SV_AV = model.get_y('noise_av').copy()
 
     if (mode == 1):
         print('Вибірка очищена від АВ метод medium')
         # --------- Увага!!! якість результату залежить від якості еталонного вікна -----------
         N_Wind_Av = 5  # розмір ковзного вікна для виявлення АВ
         Q = 1.6  # коефіцієнт виявлення АВ
-        S_AV_Detect_medium = Sliding_Window_AV_Detect_medium(SV_AV, N_Wind_Av, Q)
-        Stat_characteristics_in(S_AV_Detect_medium, 'Вибірка очищена від алгоритм medium АВ')
-        Yout_SV_AV_Detect = MNK(S_AV_Detect_medium)
-        Stat_characteristics_out(SV_AV, Yout_SV_AV_Detect, 'МНК Вибірка відчищена від АВ алгоритм medium')
-        Plot_AV(S0, S_AV_Detect_medium, 'Вибірка очищена від АВ алгоритм medium')
+
+        clean_fn = lambda x: Detection.detect_medium(x, Q, N_Wind_Av)
+        model.clean_noise(clean_fn, 'noise_av')
+
+        Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від алгоритм medium АВ')
+        Yout_SV_AV_Detect = lstsq.non_liner_fit(model.get_y('noise_av'))
+
+        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect, 'МНК Вибірка відчищена від АВ алгоритм medium')
+        Plot_AV(model.get_y(), model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм medium')
 
     if (mode == 2):
         print('Вибірка очищена від АВ метод MNK')
         # ------------------- Очищення від аномальних похибок МНК --------------------------
         n_Wind = 5  # розмір ковзного вікна для виявлення АВ
         Q_MNK = 7  # коефіцієнт виявлення АВ
-        S_AV_Detect_MNK = Sliding_Window_AV_Detect_MNK(SV_AV, Q_MNK, n_Wind)
-        Stat_characteristics_in(S_AV_Detect_MNK, 'Вибірка очищена від АВ алгоритм MNK')
-        Yout_SV_AV_Detect_MNK = MNK(S_AV_Detect_MNK)
-        Stat_characteristics_out(SV_AV, Yout_SV_AV_Detect_MNK, 'МНК Вибірка очищена від АВ алгоритм MNK')
-        Plot_AV(S0, S_AV_Detect_MNK, 'Вибірка очищена від АВ алгоритм MNK')
+
+        clean_fn = lambda x: Detection.detect_lstsq(x, Q_MNK, n_Wind)
+        model.clean_noise(clean_fn, 'noise_av')
+
+        Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм MNK')
+        Yout_SV_AV_Detect_MNK = lstsq.non_liner_fit(model.get_y('noise_av'))
+
+        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_MNK, 'МНК Вибірка очищена від АВ алгоритм MNK')
+        Plot_AV(model.get_y(), model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм MNK')
 
     if (mode == 3):
         print('Вибірка очищена від АВ метод sliding_wind')
         # --------------- Очищення від аномальних похибок sliding window -------------------
         n_Wind = 5  # розмір ковзного вікна для виявлення АВ
-        S_AV_Detect_sliding_wind = Sliding_Window_AV_Detect_sliding_wind(SV_AV, n_Wind)
-        Stat_characteristics_in(S_AV_Detect_sliding_wind, 'Вибірка очищена від АВ алгоритм sliding_wind')
-        Yout_SV_AV_Detect_sliding_wind = MNK(S_AV_Detect_sliding_wind)
-        Stat_characteristics_out(SV_AV, Yout_SV_AV_Detect_sliding_wind,
-                                 'МНК Вибірка очищена від АВ алгоритм sliding_wind')
-        Plot_AV(S0, S_AV_Detect_sliding_wind, 'Вибірка очищена від АВ алгоритм sliding_wind')
+        clean_fn = lambda x: Detection.detect_sliding_wind(x, n_Wind)
+        model.clean_noise(clean_fn, 'noise_av')
+
+        Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
+        Yout_SV_AV_Detect_sliding_wind = lstsq.non_liner_fit(model.get_y('noise_av'))
+
+        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'МНК Вибірка очищена від АВ алгоритм sliding_wind')
+        Plot_AV(model.get_y(), model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
 
     if (mode == 4):
         print('MNK згладжена вибірка очищена від АВ алгоритм sliding_wind')
         # --------------- Очищення від аномальних похибок sliding window -------------------
         n_Wind = 5  # розмір ковзного вікна для виявлення АВ
-        S_AV_Detect_sliding_wind = Sliding_Window_AV_Detect_sliding_wind(SV_AV, n_Wind)
-        Stat_characteristics_in(S_AV_Detect_sliding_wind, 'Вибірка очищена від АВ алгоритм sliding_wind')
-        Yout_SV_AV_Detect_sliding_wind = MNK(S_AV_Detect_sliding_wind)
-        Stat_characteristics_out(SV_AV, Yout_SV_AV_Detect_sliding_wind,
-                                 'MNK згладжена, вибірка очищена від АВ алгоритм sliding_wind')
+        clean_fn = lambda x: Detection.detect_sliding_wind(x, n_Wind)
+        model.clean_noise(clean_fn, 'noise_av')
+
+        Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
+        Yout_SV_AV_Detect_sliding_wind = lstsq.non_liner_fit(model.get_y('noise_av'))
+        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'MNK згладжена, вибірка очищена від АВ алгоритм sliding_wind')
+
         # --------------- Оцінювання якості моделі та візуалізація -------------------------
-        r2_score(S_AV_Detect_sliding_wind, Yout_SV_AV_Detect_sliding_wind, 'MNK_модель_згладжування')
-        Plot_AV(Yout_SV_AV_Detect_sliding_wind, S_AV_Detect_sliding_wind,
-                'MNK Вибірка очищена від АВ алгоритм sliding_wind')
+        r2.score(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'MNK_модель_згладжування')
+        Plot_AV(Yout_SV_AV_Detect_sliding_wind, model.get_y('noise_av'), 'MNK Вибірка очищена від АВ алгоритм sliding_wind')
 
     if (mode == 5):
         print('MNK ПРОГНОЗУВАННЯ')
@@ -499,12 +212,17 @@ if __name__ == '__main__':
         n_Wind = 5  # розмір ковзного вікна для виявлення АВ
         koef_Extrapol = 0.5  # коефіціент прогнозування: співвідношення інтервалу спостереження до  інтервалу прогнозування
         koef = mt.ceil(n * koef_Extrapol)  # інтервал прогнозу по кількісті вимірів статистичної вибірки
-        S_AV_Detect_sliding_wind = Sliding_Window_AV_Detect_sliding_wind(SV_AV, n_Wind)
-        Stat_characteristics_in(S_AV_Detect_sliding_wind, 'Вибірка очищена від АВ алгоритм sliding_wind')
-        Yout_SV_AV_Detect_sliding_wind = MNK_Extrapol(S_AV_Detect_sliding_wind, koef)
-        Stat_characteristics_extrapol(koef, Yout_SV_AV_Detect_sliding_wind,
-                                      'MNK ПРОГНОЗУВАННЯ, вибірка очищена від АВ алгоритм sliding_wind')
-        Plot_AV(Yout_SV_AV_Detect_sliding_wind, S_AV_Detect_sliding_wind,
+
+        clean_fn = lambda x: Detection.detect_sliding_wind(x, n_Wind)
+        model.clean_noise(clean_fn, 'noise_av')
+
+        Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
+        Yout_SV_AV_Detect_sliding_wind = lstsq.non_liner_extrapol(model.get_y('noise_av'), koef)
+
+        stats = Estimation.lstsq_estimation(Yout_SV_AV_Detect_sliding_wind, 'MNK ПРОГНОЗУВАННЯ, вибірка очищена від АВ алгоритм sliding_wind')
+        print('Довірчий інтервал прогнозованих значень за СКВ=', stats.scvS*koef)
+
+        Plot_AV(Yout_SV_AV_Detect_sliding_wind, model.get_y('noise_av'),
                 'MNK ПРОГНОЗУВАННЯ: Вибірка очищена від АВ алгоритм sliding_wind')
 
 '''

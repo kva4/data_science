@@ -20,6 +20,10 @@ class LeastSquares(object):
         C = FFTIFT.dot(Yin)
         Yout = F.dot(C)
 
+        if print_stats:
+            print('Регресійна модель:')
+            print(f'y(t) = {C[0, 0]} + {C[1, 0]} * t + {C[2, 0]} * t^2')
+
         return Yout
 
     @staticmethod
@@ -41,4 +45,15 @@ class LeastSquares(object):
             print('Регресійна модель:')
             print(f'y(t) = {C[0, 0]} + {C[1, 0]} * t + {C[2, 0]} * t^2')
 
-        return C[1, 0]
+        return C
+
+    @staticmethod
+    # ---------------------------  МНК ПРОГНОЗУВАННЯ -------------------------------
+    def non_liner_extrapol(S0, koef):
+        iter = len(S0)
+        Yout_Extrapol = np.zeros((iter + koef, 1))
+        C = LeastSquares.non_liner_coef_fit(S0, print_stats=True)
+        for i in range(iter + koef):
+            Yout_Extrapol[i, 0] = C[0, 0] + C[1, 0] * i + (C[2, 0] * i * i)  # проліноміальна крива МНК - прогнозування
+
+        return Yout_Extrapol

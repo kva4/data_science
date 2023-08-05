@@ -69,5 +69,24 @@ class BaseModel:
         for i in range(self.n):
             self.__y[noise_key][i] = self.get_y(base_key)[i]+noise[i]
 
+    def clean_noise(self, clean_fn, noise_key):
+        '''
+            The method cleans the noise from the model.
+
+            @param clean_fn - function to clean the noise
+            @param noise_key - key of the noise to clean
+        '''
+
+        if noise_key is None:
+            raise Exception(f'Key: {noise_key} is None.')
+
+        if noise_key not in self.__y:
+            raise Exception(f'Noise with key: {noise_key} does not exist.')
+
+        if clean_fn is None:
+            raise Exception('The clean function is None.')
+
+        self.__y[noise_key] = clean_fn(self.__y[noise_key])
+
     def _model(self, x):
         return x

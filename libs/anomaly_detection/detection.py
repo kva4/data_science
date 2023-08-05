@@ -7,6 +7,14 @@ class Detection(object):
 
     @staticmethod
     def detect_lstsq(data_set, Q, n_Wind):
+        '''
+            The method detects anomalies in the data set using the least squares method.
+
+            @param data_set - data set
+            @param Q - coefficient of the threshold value
+            @param n_Wind - window size
+        '''
+
         # ---- параметри циклів ----
         iter = len(data_set)
         fixed_data_set = data_set.copy()
@@ -14,7 +22,8 @@ class Detection(object):
         S0_Wind = np.zeros((n_Wind))
 
         # -------- еталон  ---------
-        Speed_standart = lstsq.non_liner_coef_fit(data_set)
+        coef = lstsq.non_liner_coef_fit(data_set)
+        Speed_standart = coef[1, 0]
         Yout_S0 = lstsq.non_liner_fit(data_set)
 
         # ---- ковзне вікно ---------
@@ -57,7 +66,7 @@ class Detection(object):
 
     # ------------------------------ Виявлення АВ за алгоритмом medium -------------------------------------
     @staticmethod
-    def Sliding_Window_AV_Detect_medium(data_set, n_Wind, Q):
+    def detect_medium(data_set, Q, n_Wind):
         # ---- параметри циклів ----
         iter = len(data_set)
         fixed_data_set = data_set.copy()
