@@ -25,6 +25,8 @@ matplotlib                   3.6.2
 import sys
 import numpy as np
 import math as mt
+import matplotlib
+matplotlib.use('WebAgg')
 import matplotlib.pyplot as plt
 from libs.models import QuadraticModel, SimpleModel
 from libs.random_value_distributions.normal_rvd import NormalRVD
