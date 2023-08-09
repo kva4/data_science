@@ -33,7 +33,6 @@ from libs.regression_analysis import lstsq
 from libs.statistics import r2, Estimation
 from libs.load_data import *
 from libs.estimators import *
-from libs.estimators import *
 
 
 def Stat_characteristics_out(SL_in, SL, Text):
@@ -121,7 +120,7 @@ if __name__ == '__main__':
         Estimation.lstsq_estimation(model.get_y(
             'noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
 
-        filter = ABF()
+        filter = ABGF()
         estimates = list(map(lambda y: filter.predict(y), model.get_y('noise_av')))
         Yout_SV_AV_Detect_sliding_wind = np.array(estimates).reshape(-1, 1)
         Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind,
@@ -147,7 +146,8 @@ if __name__ == '__main__':
         Estimation.lstsq_estimation(model.get_y('noise_av'), 'Реальні дані')
         Plot_AV(model.get_y(), model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм medium')
 
-        filter = ABF(prms_calc_type=FCPType.DynamicOptimal)
+        #filter = ABF(prms_calc_type=FCPType.DynamicOptimal)
+        filter = ABGF(prms_calc_type=FCPType.DynamicOptimal)
         estimates = list(map(lambda y: filter.predict(y), model.get_y('noise_av')))
         Yout_SV_AV_Detect_sliding_wind = np.array(estimates).reshape(-1, 1)
         Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind,

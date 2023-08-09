@@ -24,11 +24,12 @@ class AlphaBetaFilter:
             self.v_1 = 0
             return self.y[-1]
 
-        self.y.append(self.x_1 + self.alpha * (x - self.x_1))
+        y_n = self.x_1 + self.alpha * (x - self.x_1)
+        self.y.append(y_n)
         self.v_1 = self.v_1 + self.beta * (x - self.x_1) / self.dt
-        self.x_1 = self.y[-1] + self.v_1 * self.dt
+        self.x_1 = y_n + self.v_1 * self.dt
 
-        return self.y[-1]
+        return y_n
 
     @property
     def estimates(self):
