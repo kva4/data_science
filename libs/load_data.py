@@ -20,7 +20,7 @@ from pathlib import Path
 URL_TEMPLATE = "https://my.meteoblue.com/dataset/query?json=%7B%22units%22%3A%7B%22temperature%22%3A%22CELSIUS%22%2C%22velocity%22%3A%22KILOMETER_PER_HOUR%22%2C%22length%22%3A%22metric%22%2C%22energy%22%3A%22watts%22%7D%2C%22geometry%22%3A%7B%22type%22%3A%22MultiPoint%22%2C%22coordinates%22%3A%5B%5B7.57327%2C47.5584%2C279%5D%5D%2C%22locationNames%22%3A%5B%22%5Cu0411%5Cu0430%5Cu0437%5Cu0435%5Cu043b%5Cu044c%22%5D%7D%2C%22format%22%3A%22highcharts%22%2C%22timeIntervals%22%3A%5B%222022-01-01T%2B02%3A00%5C%2F2023-08-01T%2B02%3A00%22%5D%2C%22timeIntervalsAlignment%22%3A%22none%22%2C%22queries%22%3A%5B%7B%22domain%22%3A%22ERA5T%22%2C%22timeResolution%22%3A%22daily%22%2C%22codes%22%3A%5B%7B%22code%22%3A11%2C%22level%22%3A%222+m+elevation+corrected%22%2C%22aggregation%22%3A%22max%22%7D%2C%7B%22code%22%3A11%2C%22level%22%3A%222+m+elevation+corrected%22%2C%22aggregation%22%3A%22min%22%7D%2C%7B%22code%22%3A11%2C%22level%22%3A%222+m+elevation+corrected%22%2C%22aggregation%22%3A%22mean%22%7D%5D%7D%5D%7D&apikey=5838a18e295d&ts=1690880542&sig=41107d68c738ef7d835e850b76606d2f"
 
 def get_data():
-    path = Path('./Lesson_1_2/hw_1/libs/basel_output.csv')
+    path = Path('./libs/basel_output.csv')
     df = None
     if path.exists():
         df = pd.read_csv(path)

@@ -21,31 +21,9 @@ from libs.random_value_distributions.normal_rvd import NormalRVD
 from libs.statistics import *
 from libs.load_data import *
 matplotlib.use('WebAgg')
-# ------------------------ ФУНКЦІЯ парсингу реальних даних --------------------------
 
-
-def file_parsing(URL, File_name, Data_name):
-    '''
-
-    :param URL:
-    :param File_name:
-    :param Data_name:
-    :return:
-    '''
-
-    d = pd.read_excel(File_name)
-    for name, values in d[[Data_name]].items():
-        # for name, values in d[[Data_name]].iteritems(): # приклад оновлення версій pandas для директиви iteritems
-        print(values)
-    S_real = np.zeros((len(values)))
-    for i in range(len(values)):
-        S_real[i] = values[i]
-    print('Джерело даних: ', URL)
-    return S_real
 
 # --------------- графіки тренда, вимірів з нормальним шумом  ---------------------------
-
-
 def Plot_AV(S0_L, SV_L, Text):
     '''
 
@@ -71,8 +49,6 @@ def print_stats(stats: ch, title):
     print('-----------------------------------------------------')
 
 # -------------------------------- БЛОК ГОЛОВНИХ ВИКЛИКІВ ----------------------------------
-
-
 if __name__ == '__main__':
     print('Оберіть джерело вхідних даних та подальші дії:')
     print('1 - модель')

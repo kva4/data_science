@@ -25,26 +25,12 @@ import sys
 import numpy as np
 import math as mt
 import matplotlib.pyplot as plt
-import pandas as pd
 from libs.models import QuadraticModel, SimpleModel
 from libs.random_value_distributions.normal_rvd import NormalRVD
 from libs.anomaly_detection import Detection
 from libs.regression_analysis import lstsq
 from libs.statistics import r2, Estimation
 from libs.load_data import *
-
-# ------------------------ ФУНКЦІЯ парсингу реальних даних --------------------------
-
-def file_parsing(URL, File_name, Data_name):
-    d = pd.read_excel(File_name)
-    for name, values in d[[Data_name]].items():
-        print(values)
-    S_real = np.zeros((len(values)))
-    for i in range(len(values)):
-        S_real[i] = values[i]
-    print('Джерело даних: ', URL)
-    return S_real
-
 
 # ----- статистичні характеристики лінії тренда  --------
 def Stat_characteristics_out(SL_in, SL, Text):
