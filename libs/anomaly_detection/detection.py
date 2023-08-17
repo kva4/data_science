@@ -39,7 +39,7 @@ class Detection(object):
             Speed_1 = abs(Q * Speed_standart * mt.sqrt(n_Wind) * scvS)
             if Speed_1 > Speed_standart_1:
                 # детектор виявлення АВ
-                fixed_data_set[l] = Yout_S0[l, 0]
+                fixed_data_set[l] = Yout_S0[l]
         return fixed_data_set
 
     @staticmethod

@@ -32,31 +32,6 @@ from libs.regression_analysis import lstsq
 from libs.statistics import r2, Estimation
 from libs.load_data import *
 
-# ----- статистичні характеристики лінії тренда  --------
-def Stat_characteristics_out(SL_in, SL, Text):
-    # статистичні характеристики вибірки з урахуванням тренду
-    Yout = lstsq.non_liner_fit(SL)
-    iter = len(Yout)
-    SL0 = np.zeros((iter))
-    for i in range(iter):
-        SL0[i] = SL[i, 0] - Yout[i, 0]
-    mS = np.median(SL0)
-    dS = np.var(SL0)
-    scvS = mt.sqrt(dS)
-    # глобальне лінійне відхилення оцінки - динамічна похибка моделі
-    Delta = 0
-    for i in range(iter):
-        Delta = Delta + abs(SL_in[i] - Yout[i, 0])
-    Delta_average_Out = Delta / (iter + 1)
-    print('------------', Text, '-------------')
-    print('кількість елементів ивбірки=', iter)
-    print('матиматичне сподівання ВВ=', mS)
-    print('дисперсія ВВ =', dS)
-    print('СКВ ВВ=', scvS)
-    print('Динамічна похибка моделі=', Delta_average_Out)
-    print('-----------------------------------------------------')
-    return
-
 # --------------- графіки тренда, вимірів з нормальним шумом  ---------------------------
 def Plot_AV(S0_L, SV_L, Text):
     plt.clf()
@@ -142,7 +117,7 @@ if __name__ == '__main__':
         Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від алгоритм medium АВ')
         Yout_SV_AV_Detect = lstsq.non_liner_fit(model.get_y('noise_av'))
 
-        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect, 'МНК Вибірка відчищена від АВ алгоритм medium')
+        Estimation.lstsq_estimation_out(model.get_y('noise_av'), Yout_SV_AV_Detect, 'МНК Вибірка відчищена від АВ алгоритм medium')
         Plot_AV(model.get_y(), model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм medium')
 
     if (mode == 2):
@@ -157,7 +132,7 @@ if __name__ == '__main__':
         Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм MNK')
         Yout_SV_AV_Detect_MNK = lstsq.non_liner_fit(model.get_y('noise_av'))
 
-        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_MNK, 'МНК Вибірка очищена від АВ алгоритм MNK')
+        Estimation.lstsq_estimation_out(model.get_y('noise_av'), Yout_SV_AV_Detect_MNK, 'МНК Вибірка очищена від АВ алгоритм MNK')
         Plot_AV(model.get_y(), model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм MNK')
 
     if (mode == 3):
@@ -170,7 +145,7 @@ if __name__ == '__main__':
         Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
         Yout_SV_AV_Detect_sliding_wind = lstsq.non_liner_fit(model.get_y('noise_av'))
 
-        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'МНК Вибірка очищена від АВ алгоритм sliding_wind')
+        Estimation.lstsq_estimation_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'МНК Вибірка очищена від АВ алгоритм sliding_wind')
         Plot_AV(model.get_y(), model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
 
     if (mode == 4):
@@ -182,7 +157,7 @@ if __name__ == '__main__':
 
         Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
         Yout_SV_AV_Detect_sliding_wind = lstsq.non_liner_fit(model.get_y('noise_av'))
-        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'MNK згладжена, вибірка очищена від АВ алгоритм sliding_wind')
+        Estimation.lstsq_estimation_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'MNK згладжена, вибірка очищена від АВ алгоритм sliding_wind')
 
         # --------------- Оцінювання якості моделі та візуалізація -------------------------
         r2.score(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'MNK_модель_згладжування')

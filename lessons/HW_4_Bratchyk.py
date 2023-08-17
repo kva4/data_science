@@ -40,70 +40,21 @@ from libs.load_data import *
 from libs.estimators import *
 
 
-def Stat_characteristics_out(SL_in, SL, Text):
-    # статистичні характеристики вибірки з урахуванням тренду
-    Yout = lstsq.non_liner_fit(SL)
-    iter = len(Yout)
-    SL0 = np.zeros((iter))
-    for i in range(iter):
-        SL0[i] = SL[i, 0] - Yout[i, 0]
-    mS = np.median(SL0)
-    dS = np.var(SL0)
-    scvS = mt.sqrt(dS)
-    # глобальне лінійне відхилення оцінки - динамічна похибка моделі
-    Delta = 0
-    for i in range(iter):
-        Delta = Delta + abs(SL_in[i] - Yout[i, 0])
-    Delta_average_Out = Delta / (iter + 1)
-    print('------------', Text, '-------------')
-    print('кількість елементів ивбірки=', iter)
-    print('матиматичне сподівання ВВ=', mS)
-    print('дисперсія ВВ =', dS)
-    print('СКВ ВВ=', scvS)
-    print('Динамічна похибка моделі=', Delta_average_Out)
-    print('-----------------------------------------------------')
-    return
-
-# ----- статистичні характеристики лінії тренда  --------
-def Stat_characteristics_out_expo (SL_in, SL, Text):
-    # статистичні характеристики вибірки з урахуванням тренду
-    Yout = lstsq.non_liner_fit(SL)
-    iter = len(Yout)
-    SL0 = np.zeros((iter ))
-    for i in range(iter):
-        SL0[i] = SL[i] - Yout[i]
-    mS = np.median(SL0)
-    dS = np.var(SL0)
-    scvS = mt.sqrt(dS)
-    # глобальне лінійне відхилення оцінки - динамічна похибка моделі
-    Delta = 0
-    for i in range(iter):
-        Delta = Delta + abs(SL_in[i] - Yout[i])
-    Delta_average_Out = Delta / (iter + 1)
-    print('------------', Text ,'-------------')
-    print('кількість елементів ивбірки=', iter)
-    print('матиматичне сподівання ВВ=', mS)
-    print('дисперсія ВВ =', dS)
-    print('СКВ ВВ=', scvS)
-    print('Динамічна похибка моделі=', Delta_average_Out)
-    print('-----------------------------------------------------')
-    return
-
 def exp_with_lstsq(data_set, print_stats=False):
     C = lstsq.non_liner_coef_fit(data_set, lstsq_range=4, print_stats=print_stats)
-    c0=C[0, 0]
-    c1=C[1, 0]
-    c2=C[2, 0]
-    c3=C[3, 0]
+    c0=C[0]
+    c1=C[1]
+    c2=C[2]
+    c3=C[3]
     a3 = 3 * (c3 / c2)
     a2 = (2*c2)/(a3**2)
     a0 = c0 - a2
     a1 = c1-(a2*a3)
     print('Регресійна модель:')
     print('y(t) = ', a0, ' + ', a1, ' * t', ' + ', a2, ' * exp(', a3, ' * t )')
-    y_out = np.zeros((len(data_set), 1))
+    y_out = np.zeros(len(data_set))
     for i in range(iter):
-        y_out[i, 0]=a0 + a1 * i + a2 * mt.exp(a3 * i)
+        y_out[i]=a0 + a1 * i + a2 * mt.exp(a3 * i)
     return y_out
 
 # -------------------------------- Expo_scipy ---------------------------------
@@ -170,7 +121,7 @@ if __name__ == '__main__':
 
         Estimation.lstsq_estimation(model.get_y('noise_av'), 'Вибірка очищена від АВ алгоритм sliding_wind')
         Yout_SV_AV_Detect_sliding_wind = lstsq.non_liner_fit(model.get_y('noise_av'))
-        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'MNK згладжена, вибірка очищена від АВ алгоритм sliding_wind')
+        Estimation.lstsq_estimation_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'MNK згладжена, вибірка очищена від АВ алгоритм sliding_wind')
 
         # --------------- Оцінювання якості моделі та візуалізація -------------------------
         r2.score(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'MNK_модель_згладжування')
@@ -186,9 +137,7 @@ if __name__ == '__main__':
         clean_fn = lambda x: Detection.detect_sliding_wind(x, n_Wind)
         model.clean_noise(clean_fn, 'noise_av')
 
-
         Yout_SV_AV_Detect_sliding_wind = lstsq.non_liner_extrapol(model.get_y('noise_av'), koef)
-
         stats = Estimation.lstsq_estimation(Yout_SV_AV_Detect_sliding_wind, 'MNK ПРОГНОЗУВАННЯ, вибірка очищена від АВ алгоритм sliding_wind')
         print('Довірчий інтервал прогнозованих значень за СКВ=', stats.scvS*koef)
 
@@ -206,7 +155,7 @@ if __name__ == '__main__':
         StartTime = time.time()  # фіксація часу початку обчислень
         Yout_SV_AV_Detect_sliding_wind = exp_with_lstsq(model.get_y('noise_av'))
         totalTime = (time.time() - StartTime)  # фіксація часу, на очищення від АВ
-        Stat_characteristics_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind,
+        Estimation.lstsq_estimation_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind,
                              'MNK ЕКСПОНЕНТА, вибірка очищена від АВ алгоритм sliding_wind')
 
         # --------------- Оцінювання якості моделі та візуалізація -------------------------
@@ -216,7 +165,6 @@ if __name__ == '__main__':
                 'MNK ЕКСПОНЕНТА: Вибірка очищена від АВ алгоритм sliding_wind')
 
     if (mode == 4):
-        # TODO: fix data for Stat_characteristics_out_expo & r2.score
         print('Регресія ЕКСПОНЕНТА')
         # --------------- Очищення від аномальних похибок sliding window -------------------
         n_Wind = 5  # розмір ковзного вікна для виявлення АВ
@@ -232,11 +180,11 @@ if __name__ == '__main__':
         StartTime = time.time()  # фіксація часу початку обчислень
         Yout_SV_AV_Detect_sliding_wind = Expo_Regres(model.get_y('noise_av'), 10)
         totalTime = (time.time() - StartTime)  # фіксація часу, на очищення від АВ
-        Stat_characteristics_out_expo(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind,
+        Estimation.lstsq_estimation_out(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind,
                              'Регресія ЕКСПОНЕНТА, вибірка очищена від АВ алгоритм sliding_wind')
 
         # --------------- Оцінювання якості моделі та візуалізація -------------------------
-        # r2.score(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'Регресія ЕКСПОНЕНТА_модель_згладжування')
+        r2.score(model.get_y('noise_av'), Yout_SV_AV_Detect_sliding_wind, 'Регресія ЕКСПОНЕНТА_модель_згладжування')
         print('totalTime =', totalTime, 's')
         Plot_AV(Yout_SV_AV_Detect_sliding_wind, model.get_y('noise_av'),
                 'Регресія ЕКСПОНЕНТА: Вибірка очищена від АВ алгоритм sliding_wind')
@@ -246,8 +194,12 @@ if __name__ == '__main__':
 '''
 Аналіз отриманих результатів - верифікація математичних моделей та результатів розрахунків.
 ------------------------------------------------------------------------------------------
+На жаль, не зміг підбрати не лінійну модель для своїх реальниї даних, поки що не маю можливості
+використати додаток, щоб виришити систему рівнянь для підбору коефіцієнтів.
 
 Висновок
 ------------------------------------------------------------------------------------------
+Не лінійні моделі дають кращі прогностичні результати, ніж лінійні. Це пов'язано з тим, що
+не лінійні моделі відтворюють більш точно трендову складову часового ряду.
 
 '''

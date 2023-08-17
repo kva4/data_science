@@ -5,13 +5,12 @@ class LeastSquares(object):
 
     # ------------- МНК згладжуваннядля визначення стат. характеристик -------------
     @staticmethod
-    def non_liner_fit(data_set, lstsq_range = 3, print_stats=False):
+    def non_liner_fit(data_set, lstsq_range=3, print_stats=False):
         iter = len(data_set)
-        Yin = np.zeros((iter, 1))
+        Yin = np.asmatrix(data_set).T  # формування матриці вхідних даних
         F = np.ones((iter, lstsq_range))
         power_range = range(0, F.shape[1])
         for i in range(iter):  # формування структури вхідних матриць МНК
-            Yin[i, 0] = float(data_set[i])  # формування матриці вхідних даних
             F[i] = list(map(lambda x: float(i ** x), power_range))
         FT = F.T
         FFT = FT.dot(F)
@@ -24,16 +23,15 @@ class LeastSquares(object):
             print('Регресійна модель:')
             print(f'y(t) = {C[0, 0]} + {C[1, 0]} * t + {C[2, 0]} * t^2')
 
-        return Yout
+        return np.reshape(Yout.tolist(), iter)
 
     @staticmethod
-    def non_liner_coef_fit(data_set, lstsq_range = 3, print_stats=False):
+    def non_liner_coef_fit(data_set, lstsq_range=3, print_stats=False):
         iter = len(data_set)
-        Yin = np.zeros((iter, 1))
+        Yin = np.asmatrix(data_set).T  # формування матриці вхідних даних
         F = np.ones((iter, lstsq_range))
         power_range = range(0, F.shape[1])
         for i in range(iter):  # формування структури вхідних матриць МНК
-            Yin[i, 0] = float(data_set[i])  # формування матриці вхідних даних
             F[i] = list(map(lambda x: float(i ** x), power_range))
         FT = F.T
         FFT = FT.dot(F)
@@ -45,16 +43,16 @@ class LeastSquares(object):
             print('Регресійна модель:')
             print(f'y(t) = {C[0, 0]} + {C[1, 0]} * t + {C[2, 0]} * t^2')
 
-        return C
+        return np.reshape(C.tolist(), lstsq_range)
 
     @staticmethod
     # ---------------------------  МНК ПРОГНОЗУВАННЯ -------------------------------
-    def non_liner_extrapol(S0, koef, lstsq_range = 3):
+    def non_liner_extrapol(S0, koef, lstsq_range=3):
         iter = len(S0)
-        Yout_Extrapol = np.zeros((iter + koef, 1))
+        Yout_Extrapol = np.zeros(iter + koef)
         C = LeastSquares.non_liner_coef_fit(S0, lstsq_range, print_stats=True)
         for i in range(iter + koef):
             # проліноміальна крива МНК - прогнозування
-            Yout_Extrapol[i, 0] = C[0, 0] + C[1, 0] * i + (C[2, 0] * i * i)
+            Yout_Extrapol[i] = C[0] + C[1] * i + (C[2] * i * i)
 
         return Yout_Extrapol

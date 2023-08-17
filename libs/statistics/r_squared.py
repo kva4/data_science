@@ -8,7 +8,7 @@ class RSquared(object):
         numerator = 0
         denominator_1 = 0
         for i in range(n):
-            numerator = numerator + (SL[i] - Yout[i, 0]) ** 2
+            numerator = numerator + (SL[i] - Yout[i]) ** 2
             denominator_1 = denominator_1 + SL[i]
         denominator_2 = 0
         for i in range(n):
@@ -19,7 +19,3 @@ class RSquared(object):
         print('Коефіцієнт детермінації (ймовірність апроксимації)=', R2_score_our)
 
         return R2_score_our
-
-    @staticmethod
-    def score_expo(SL, Yout, Text):
-        raise NotImplementedError('alpha_beta_gamma not implemented yet')
